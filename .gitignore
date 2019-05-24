@@ -3,3 +3,4 @@ node_modules
 .vscode/
 controleFinanceiro.sql
 backlog.txt
+src/config/database.js
