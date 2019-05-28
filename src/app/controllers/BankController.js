@@ -2,7 +2,7 @@ const { Bank } = require('../models')
 
 class BankController {
   async list (req, res) {
-    const bankList = await Bank.findAll()
+    const bankList = await Bank.findAll({ order: ['id'] })
     return res.status(200).json(bankList)
   }
 
