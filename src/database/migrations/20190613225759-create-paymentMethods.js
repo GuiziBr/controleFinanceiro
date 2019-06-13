@@ -1,14 +1,14 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface
-      .createTable('banks', {
+      .createTable('payment_methods', {
         id: {
           allowNull: false,
           autoIncrement: true,
           primaryKey: true,
           type: Sequelize.INTEGER
         },
-        name: {
+        description: {
           allowNull: false,
           type: Sequelize.STRING
         },
@@ -27,14 +27,14 @@ module.exports = {
         }
       })
       .then(() => {
-        queryInterface.addConstraint('banks', ['name'], {
+        queryInterface.addConstraint('payment_methods', ['description'], {
           type: 'unique',
-          name: 'custom_unique_constraint_name'
+          name: 'custom_unique_contraint_description'
         })
       })
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('banks')
+    return queryInterface.dropTable('payment_methods')
   }
 }

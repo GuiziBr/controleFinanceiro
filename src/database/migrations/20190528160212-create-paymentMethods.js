@@ -26,7 +26,6 @@ module.exports = {
       }
     })
   },
-
   down: (queryInterface, Sequelize) => {
     return queryInterface.dropTable('payment_methods')
   }

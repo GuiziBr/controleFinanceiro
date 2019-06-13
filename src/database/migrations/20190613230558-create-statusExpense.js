@@ -1,21 +1,16 @@
 module.exports = {
   up: (queryInterface, Sequelize) => {
     return queryInterface
-      .createTable('banks', {
+      .createTable('status_expense', {
         id: {
           allowNull: false,
           autoIncrement: true,
           primaryKey: true,
           type: Sequelize.INTEGER
         },
-        name: {
+        description: {
           allowNull: false,
           type: Sequelize.STRING
-        },
-        active: {
-          allowNull: false,
-          type: Sequelize.BOOLEAN,
-          defaultValue: false
         },
         created_at: {
           allowNull: false,
@@ -27,14 +22,14 @@ module.exports = {
         }
       })
       .then(() => {
-        queryInterface.addConstraint('banks', ['name'], {
+        queryInterface.addConstraint('status_expense', ['description'], {
           type: 'unique',
-          name: 'custom_unique_constraint_name'
+          name: 'custom_unique_constraint_description'
         })
       })
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('banks')
+    return queryInterface.dropTable('status_expense')
   }
 }

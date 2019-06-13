@@ -15,18 +15,28 @@ class PaymentMethodController {
   }
 
   async store (req, res) {
-    await PaymentMethod.create(req.body)
-    return res.status(201).json(req.body)
+    try {
+      const result = await PaymentMethod.create(req.body)
+      return res.status(201).json(result.dataValues)
+    } catch (error) {
+      const errorMessage = error.errors[0].message
+      return res.status(409).json({ error: errorMessage })
+    }
   }
 
   async update (req, res) {
-    const result = await PaymentMethod.update(req.body, {
-      where: { id: req.params.id }
-    })
-    if (result[0]) {
-      return res.status(200).json(req.body)
+    try {
+      const result = await PaymentMethod.update(req.body, {
+        where: { id: req.params.id }
+      })
+      if (result[0]) {
+        return res.status(200).json(req.body)
+      }
+      return res.status(404).json({ error: 'Payment Method not found' })
+    } catch (error) {
+      const errorMessage = error.errors[0].message
+      return res.status(409).json({ error: errorMessage })
     }
-    return res.status(404).json({ error: 'Payment Method not found' })
   }
 
   async activate (req, res) {
