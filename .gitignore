@@ -4,3 +4,4 @@ node_modules
 controleFinanceiro.sql
 backlog.txt
 src/config/database.js
+notes.txt

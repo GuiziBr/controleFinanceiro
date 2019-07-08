@@ -9,7 +9,7 @@ const schema = {
         .max(12),
       year: Joi.number()
         .integer()
-        .min(1900)
+        .min(2000)
         .max(2100)
     }
   },
