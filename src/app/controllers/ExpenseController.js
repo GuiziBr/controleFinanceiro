@@ -1,16 +1,28 @@
-const { Expense } = require('../models')
-const expenseFilterByMonth = require('../handlers/expenseFilterByMonth')
+const { Expense, Bank, PaymentMethod, StatusExpense } = require('../models')
 
 class ExpenseController {
   async list (req, res) {
     const expensesList = await Expense.findAll({
-      include: [{ all: true }],
+      include: [
+        {
+          model: StatusExpense,
+          as: 'status',
+          attributes: ['id', 'description']
+        },
+        {
+          model: PaymentMethod,
+          as: 'paymentMethod',
+          attributes: ['id', 'description', 'active']
+        },
+        {
+          model: Bank,
+          as: 'bank',
+          attributes: ['id', 'name', 'active']
+        }
+      ],
+      attributes: { exclude: ['bank_id', 'payment_method_id', 'status_id'] },
       order: ['id']
     })
-    if (expensesList && Object.entries(req.query).length) {
-      const expensesFilteredList = expenseFilterByMonth(expensesList, req.query)
-      return res.status(200).json(expensesFilteredList)
-    }
     return res.status(200).json(expensesList)
   }
 
