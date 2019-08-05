@@ -27,7 +27,27 @@ class ExpenseController {
   }
 
   async show (req, res) {
-    const expense = await Expense.findByPk(req.params.id)
+    const expense = await Expense.findByPk(req.params.id, {
+      include: [
+        {
+          model: StatusExpense,
+          as: 'status',
+          attributes: ['id', 'description']
+        },
+        {
+          model: PaymentMethod,
+          as: 'paymentMethod',
+          attributes: ['id', 'description', 'active']
+        },
+        {
+          model: Bank,
+          as: 'bank',
+          attributes: ['id', 'name', 'active']
+        }
+      ],
+      attributes: { exclude: ['bank_id', 'payment_method_id', 'status_id'] },
+      order: ['id']
+    })
     if (!expense) {
       return res.status(404).json({ error: 'Expense not found' })
     }
@@ -35,28 +55,48 @@ class ExpenseController {
   }
 
   async store (req, res) {
-    await Expense.create(req.body)
-    return res.status(201).json(req.body)
+    try {
+      const expense = {
+        ...req.body,
+        purchase_date: new Date(req.body.purchase_date),
+        active: true
+      }
+      const result = await Expense.create(expense)
+      return res.status(201).json(result.dataValues)
+    } catch (error) {
+      if (error.parent) {
+        if (error.parent.constraint.includes('bank_id')) {
+          return res.status(404).json({ error: 'Bank not found' })
+        } else {
+          return res.status(404).json({ error: 'Payment Method not found' })
+        }
+      }
+      const errorMessage = error.errors[0].message
+      return res.status(409).json({ error: errorMessage })
+    }
   }
 
   async update (req, res) {
-    const result = await Expense.update(req.body, {
-      where: { id: req.params.id }
-    })
-    if (result[0]) {
-      return res.status(200).json(req.body)
-    }
-    return res.status(404).json({ error: 'Expense not found' })
-  }
+    try {
+      let expense = req.body
 
-  async activate (req, res) {
-    const result = await Expense.update(req.body, {
-      where: { id: req.params.id }
-    })
-    if (result[0]) {
-      return res.status(200).json(req.body)
+      if (expense.purchase_date) {
+        expense.purchase_date = new Date(expense.purchase_date)
+      }
+
+      const result = await Expense.update(expense, {
+        where: { id: req.params.id }
+      })
+
+      if (result[0]) return res.status(200).json(req.body)
+      return res.status(404).json({ error: 'Expense not found' })
+    } catch (error) {
+      console.log(error.parent.constraint)
+      if (error.parent.constraint.includes('bank_id')) {
+        return res.status(404).json({ error: 'Bank not found' })
+      }
+      return res.status(404).json({ error: 'Payment Method not found' })
     }
-    return res.status(404).json({ error: 'Expense not found' })
   }
 }
 

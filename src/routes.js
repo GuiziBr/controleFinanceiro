@@ -53,6 +53,16 @@ routes.get(
   validate(validators.Expense.get),
   ExpenseController.show
 )
-routes.post('/expenses', ExpenseController.store)
+routes.post(
+  '/expenses',
+  validate(validators.Expense.post),
+  ExpenseController.store
+)
+
+routes.put(
+  '/expenses/:id',
+  validate(validators.Expense.put),
+  ExpenseController.update
+)
 
 module.exports = routes
