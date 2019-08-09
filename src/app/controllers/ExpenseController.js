@@ -91,7 +91,6 @@ class ExpenseController {
       if (result[0]) return res.status(200).json(req.body)
       return res.status(404).json({ error: 'Expense not found' })
     } catch (error) {
-      console.log(error.parent.constraint)
       if (error.parent.constraint.includes('bank_id')) {
         return res.status(404).json({ error: 'Bank not found' })
       }

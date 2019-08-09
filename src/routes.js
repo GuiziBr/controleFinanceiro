@@ -6,7 +6,7 @@ const validators = require('./app/validators')
 const BankController = require('./app/controllers/BankController')
 const PaymentMethodController = require('./app/controllers/PaymentMethodController')
 const ExpenseController = require('./app/controllers/ExpenseController')
-// const PaymentController = require('./app/controllers/PaymentController')
+const PaymentController = require('./app/controllers/PaymentController')
 
 // bank
 routes.get('/banks', BankController.list)
@@ -43,11 +43,7 @@ routes.patch(
 )
 
 // expenses
-routes.get(
-  '/expenses',
-  validate(validators.Expense.list),
-  ExpenseController.list
-)
+routes.get('/expenses', ExpenseController.list)
 routes.get(
   '/expenses/:id',
   validate(validators.Expense.get),
@@ -63,6 +59,13 @@ routes.put(
   '/expenses/:id',
   validate(validators.Expense.put),
   ExpenseController.update
+)
+
+// payments
+routes.get(
+  '/payments',
+  validate(validators.Payment.get),
+  PaymentController.list
 )
 
 module.exports = routes
