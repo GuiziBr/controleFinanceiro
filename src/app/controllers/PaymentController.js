@@ -1,4 +1,10 @@
-const { Payment, Expense, Bank, PaymentMethod } = require('../models')
+const {
+  Payment,
+  Expense,
+  Bank,
+  PaymentMethod,
+  StatusExpense
+} = require('../models')
 const { Op } = require('sequelize')
 
 const moment = require('moment')
@@ -54,6 +60,64 @@ class PaymentController {
 
     if (payments[0]) return res.status(200).json(payments)
     return res.status(404).json({ error: 'No payments found' })
+  }
+
+  async monthReport (req, res) {
+    const month = req.query.month < 10 ? `0${req.query.month}` : req.query.month
+    const queryDate = moment(`${req.query.year}-${month}`)
+      .endOf('M')
+      .format()
+    console.log(queryDate)
+    const expenses = await Expense.findAll({
+      include: [
+        {
+          model: Payment,
+          as: 'payments',
+          attributes: [
+            'amount_paid',
+            'month',
+            'year',
+            'amount_consumed',
+            'remaining_amount'
+          ],
+          where: {
+            month,
+            year: req.query.year
+          }
+        },
+        {
+          model: StatusExpense,
+          as: 'status',
+          attributes: ['id', 'description']
+        },
+        {
+          model: PaymentMethod,
+          as: 'paymentMethod',
+          attributes: ['id', 'description', 'active']
+        },
+        {
+          model: Bank,
+          as: 'bank',
+          attributes: ['id', 'name', 'active']
+        }
+      ],
+      attributes: {
+        exclude: [
+          'bank_id',
+          'payment_method_id',
+          'status_id',
+          'createdAt',
+          'updatedAt'
+        ]
+      },
+      where: {
+        active: true,
+        purchase_date: { [Op.lte]: queryDate }
+      }
+    })
+
+    if (expenses[0]) return res.status(200).json(expenses)
+    return res.status(404).json({ error: 'No expenses found' })
   }
 }
 

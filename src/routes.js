@@ -68,4 +68,10 @@ routes.get(
   PaymentController.list
 )
 
+routes.get(
+  '/payments/monthReport',
+  validate(validators.Payment.getReport),
+  PaymentController.monthReport
+)
+
 module.exports = routes
