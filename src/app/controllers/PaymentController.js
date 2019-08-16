@@ -157,6 +157,23 @@ class PaymentController {
     }
     return res.status(200).json(expenses)
   }
+  async store (req, res) {
+    try {
+      const result = await Payment.create(req.body)
+      return res.status(201).json(result.dataValues)
+    } catch (error) {
+      if (error.parent) {
+        switch (error.parent.code) {
+          case '23503':
+            return res.status(404).json({ error: 'Expense not found' })
+          case '23505':
+            return res.status(409).json({ error: 'Payment duplicated' })
+          default:
+            return res.status(400).json({ error: 'Error on creating payment' })
+        }
+      } else return res.status(500).json({ error: 'Internal server error' })
+    }
+  }
 }
 
 module.exports = new PaymentController()
