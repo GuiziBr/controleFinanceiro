@@ -2,7 +2,7 @@ const { Expense, Bank, PaymentMethod, StatusExpense } = require('../models')
 
 class ExpenseController {
   async list (req, res) {
-    const expensesList = await Expense.findAll({
+    const result = await Expense.findAll({
       include: [
         {
           model: StatusExpense,
@@ -23,7 +23,8 @@ class ExpenseController {
       attributes: { exclude: ['bank_id', 'payment_method_id', 'status_id'] },
       order: ['id']
     })
-    return res.status(200).json(expensesList)
+
+    return res.status(200).json(result)
   }
 
   async show (req, res) {

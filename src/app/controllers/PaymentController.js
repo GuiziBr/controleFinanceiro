@@ -5,7 +5,7 @@ const {
   PaymentMethod,
   StatusExpense
 } = require('../models')
-const { Op } = require('sequelize')
+const { Op, literal } = require('sequelize')
 
 const moment = require('moment')
 
@@ -64,60 +64,98 @@ class PaymentController {
 
   async monthReport (req, res) {
     const month = req.query.month < 10 ? `0${req.query.month}` : req.query.month
-    const queryDate = moment(`${req.query.year}-${month}`)
+    const year = req.query.year
+    const queryDate = moment(`${year}-${month}`)
       .endOf('M')
       .format()
-    console.log(queryDate)
-    const expenses = await Expense.findAll({
+
+    const result = await Expense.findAll({
+      raw: true,
+      nest: true,
+      where: {
+        active: true,
+        purchase_date: { [Op.lt]: queryDate },
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { status_id: 1 },
+              { status_id: 3 },
+              {
+                [Op.and]: [
+                  { status_id: 2 },
+                  { '$payment.month$': { [Op.gte]: month } },
+                  { '$payment.year$': { [Op.gte]: year } }
+                ]
+              }
+            ]
+          }
+        ]
+      },
       include: [
         {
           model: Payment,
-          as: 'payments',
-          attributes: [
-            'amount_paid',
-            'month',
-            'year',
-            'amount_consumed',
-            'remaining_amount'
-          ],
-          where: {
-            month,
-            year: req.query.year
+          as: 'payment',
+          attributes: {
+            exclude: [
+              'remaining_amount',
+              'createdAt',
+              'updatedAt',
+              'status_id',
+              'expense_id'
+            ],
+            include: [
+              [literal('amount_paid - amount_consumed'), 'remaining_amount']
+            ]
           }
+        },
+        {
+          model: PaymentMethod,
+          as: 'paymentMethod',
+          attributes: ['id', 'description']
+        },
+        {
+          model: Bank,
+          as: 'bank',
+          attributes: ['id', 'name']
         },
         {
           model: StatusExpense,
           as: 'status',
           attributes: ['id', 'description']
-        },
-        {
-          model: PaymentMethod,
-          as: 'paymentMethod',
-          attributes: ['id', 'description', 'active']
-        },
-        {
-          model: Bank,
-          as: 'bank',
-          attributes: ['id', 'name', 'active']
         }
       ],
       attributes: {
         exclude: [
-          'bank_id',
-          'payment_method_id',
-          'status_id',
           'createdAt',
-          'updatedAt'
+          'updatedAt',
+          'status_id',
+          'payment_method_id',
+          'bank_id'
         ]
       },
-      where: {
-        active: true,
-        purchase_date: { [Op.lte]: queryDate }
+      order: ['id']
+    })
+
+    let expenses = []
+    result.forEach(item => {
+      if (
+        item.payment.month === Number(month) &&
+        item.payment.year === Number(year)
+      ) {
+        expenses.push(item)
+      } else {
+        const index = expenses.findIndex(expense => expense.id === item.id)
+        if (index === -1) {
+          delete item.payment
+          expenses.push(item)
+        }
       }
     })
 
-    if (expenses[0]) return res.status(200).json(expenses)
-    return res.status(404).json({ error: 'No expenses found' })
+    if (!expenses[0]) {
+      return res.status(404).json({ error: 'No expenses found' })
+    }
+    return res.status(200).json(expenses)
   }
 }
 
