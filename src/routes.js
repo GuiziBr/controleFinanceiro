@@ -79,4 +79,10 @@ routes.post(
   PaymentController.store
 )
 
+routes.put(
+  '/payments/:id',
+  validate(validators.Payment.put),
+  PaymentController.update
+)
+
 module.exports = routes

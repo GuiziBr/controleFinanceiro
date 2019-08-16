@@ -174,6 +174,23 @@ class PaymentController {
       } else return res.status(500).json({ error: 'Internal server error' })
     }
   }
+
+  async update (req, res) {
+    try {
+      console.log(req.params.id)
+      const result = await Payment.update(req.body, {
+        where: {
+          expense_id: req.params.id,
+          month: req.query.month,
+          year: req.query.year
+        }
+      })
+      if (result[0]) return res.status(200).json(req.body)
+      return res.status(404).json({ error: 'Payment not found' })
+    } catch (error) {
+      console.log(error)
+    }
+  }
 }
 
 module.exports = new PaymentController()

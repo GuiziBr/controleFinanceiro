@@ -50,6 +50,29 @@ const schema = {
         .required(),
       amount_consumed: Joi.number().positive()
     }
+  },
+  put: {
+    params: {
+      id: Joi.number()
+        .integer()
+        .required()
+    },
+    query: {
+      month: Joi.number()
+        .min(1)
+        .max(12)
+        .integer()
+        .required(),
+      year: Joi.number()
+        .min(1900)
+        .max(2100)
+        .integer()
+        .required()
+    },
+    body: {
+      amount_paid: Joi.number().positive(),
+      amount_consumed: Joi.number().positive()
+    }
   }
 }
 

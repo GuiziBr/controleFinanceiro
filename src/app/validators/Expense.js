@@ -3,7 +3,9 @@ const Joi = require('joi')
 const schema = {
   get: {
     params: {
-      id: Joi.number().required()
+      id: Joi.number()
+        .integer()
+        .required()
     }
   },
   post: {
@@ -34,7 +36,9 @@ const schema = {
   },
   put: {
     params: {
-      id: Joi.number().required()
+      id: Joi.number()
+        .integer()
+        .required()
     },
     body: {
       description: Joi.string()

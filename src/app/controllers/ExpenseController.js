@@ -88,7 +88,6 @@ class ExpenseController {
       const result = await Expense.update(expense, {
         where: { id: req.params.id }
       })
-
       if (result[0]) return res.status(200).json(req.body)
       return res.status(404).json({ error: 'Expense not found' })
     } catch (error) {

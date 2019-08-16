@@ -10,4 +10,4 @@ Aplicação para controle de despesas domésticas
    1. Controller para manutenção de bancos (list/store/show/update/activate)
    2. Controller para manutenção de métodos de pagamento (list/show/store/update/activate)
    3. Controller para manutenção de despesas (list/show/store/update/)
-   4. Controller para manutenção de pagamentos (list/monthReport/store) (restante em desenvolvimento)
+   4. Controller para manutenção de pagamentos (list/monthReport/store/update) (restante em desenvolvimento)
