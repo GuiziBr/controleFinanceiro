@@ -206,6 +206,23 @@ class PaymentController {
       return res.status(500).json({ error: `Error on deleting payment` })
     }
   }
+
+  async patch (req, res) {
+    try {
+      const result = await Payment.increment('amount_consumed', {
+        by: req.body.amount_to_consume,
+        where: {
+          expense_id: req.params.id,
+          month: req.query.month,
+          year: req.query.year
+        }
+      })
+      if (result[0][0].length) return res.status(200).json(result[0][0][0])
+      return res.status(404).json({ error: 'Payment not found' })
+    } catch (error) {
+      return res.status(500).json({ error: `Error on incrementing payment` })
+    }
+  }
 }
 
 module.exports = new PaymentController()

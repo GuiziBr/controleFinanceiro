@@ -91,4 +91,10 @@ routes.delete(
   PaymentController.delete
 )
 
+routes.patch(
+  '/payments/:id',
+  validate(validators.Payment.patch),
+  PaymentController.patch
+)
+
 module.exports = routes
