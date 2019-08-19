@@ -73,6 +73,21 @@ const schema = {
       amount_paid: Joi.number().positive(),
       amount_consumed: Joi.number().positive()
     }
+  },
+  delete: {
+    query: {
+      year: Joi.number()
+        .integer()
+        .min(1900)
+        .max(2100),
+      month: Joi.number()
+        .integer()
+        .min(1)
+        .max(12)
+    },
+    params: {
+      id: Joi.number()
+    }
   }
 }
 

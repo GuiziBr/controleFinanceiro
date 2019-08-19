@@ -177,7 +177,6 @@ class PaymentController {
 
   async update (req, res) {
     try {
-      console.log(req.params.id)
       const result = await Payment.update(req.body, {
         where: {
           expense_id: req.params.id,
@@ -188,7 +187,23 @@ class PaymentController {
       if (result[0]) return res.status(200).json(req.body)
       return res.status(404).json({ error: 'Payment not found' })
     } catch (error) {
-      console.log(error)
+      return res.status(500).json({ error: `Error on updating payment` })
+    }
+  }
+
+  async delete (req, res) {
+    try {
+      const result = await Payment.destroy({
+        where: {
+          expense_id: req.params.id,
+          month: req.query.month,
+          year: req.query.year
+        }
+      })
+      if (result) return res.status(200).json({ message: 'Payment deleted' })
+      return res.status(404).json({ error: 'Payment not found' })
+    } catch (error) {
+      return res.status(500).json({ error: `Error on deleting payment` })
     }
   }
 }
