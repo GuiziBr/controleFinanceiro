@@ -159,6 +159,15 @@ class PaymentController {
   }
   async store (req, res) {
     try {
+      const {
+        dataValues: { status_id: expenseStatus }
+      } = await Expense.findOne({
+        where: { id: `${req.body.expense_id}` },
+        attributes: ['status_id']
+      })
+
+      if (expenseStatus === 2) throw new Error('Payment not allowed')
+
       const result = await Payment.create(req.body)
       return res.status(201).json(result.dataValues)
     } catch (error) {
@@ -171,6 +180,10 @@ class PaymentController {
           default:
             return res.status(400).json({ error: 'Error on creating payment' })
         }
+      } else if (error.message === 'Payment not allowed') {
+        return res
+          .status(403)
+          .json({ error: 'Payment not allowed for expense already closed' })
       } else return res.status(500).json({ error: 'Internal server error' })
     }
   }
