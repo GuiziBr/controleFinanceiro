@@ -1,4 +1,4 @@
-const Joi = require('joi')
+const Joi = require('@hapi/joi')
 
 const schema = {
   list: {
@@ -27,7 +27,15 @@ const schema = {
       purchase_date: Joi.date().required(),
       installments_number: Joi.number()
         .integer()
-        .min(1),
+        .min(1)
+        .when('status_id', {
+          is: 1,
+          then: Joi.required()
+        })
+        .when('status_id', {
+          is: 3,
+          then: Joi.forbidden()
+        }),
       due_date: Joi.number()
         .min(1)
         .max(31),
