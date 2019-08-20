@@ -20,11 +20,11 @@ Aplicação para controle de despesas domésticas
       4. Atualizar método de pagamento
       5. Ativar/Inativar método de pagamento
    3. Controller para manutenção de despesas (list/show/store/update/)
-      1. Listar despesas
+      1. Listar despesas (com ou sem filtro para active)
       2. Exibir despesa
       3. Armazenar despesa
       4. Atualizar despesa
-      5. Ativar/Inativar despesa (em andamento)
+      5. Ativar/Inativar despesa
    4. Controller para manutenção de pagamentos (list/monthReport/store/update/delete/patch)
       1. Listar pagamentos (com ou sem filtro)
       2. Exibir report mensal

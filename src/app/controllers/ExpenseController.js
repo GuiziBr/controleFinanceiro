@@ -2,6 +2,7 @@ const { Expense, Bank, PaymentMethod, StatusExpense } = require('../models')
 
 class ExpenseController {
   async list (req, res) {
+    const active = req.query.hasOwnProperty('active') ? req.query.active : true
     const result = await Expense.findAll({
       include: [
         {
@@ -21,6 +22,7 @@ class ExpenseController {
         }
       ],
       attributes: { exclude: ['bank_id', 'payment_method_id', 'status_id'] },
+      where: { active },
       order: ['id']
     })
 
@@ -95,6 +97,19 @@ class ExpenseController {
         return res.status(404).json({ error: 'Bank not found' })
       }
       return res.status(404).json({ error: 'Payment Method not found' })
+    }
+  }
+
+  async activate (req, res) {
+    try {
+      const result = await Expense.update(req.body, {
+        where: { id: req.params.id }
+      })
+      if (result[0]) return res.status(200).json(req.body)
+      return res.status(404).json({ error: 'Expense not found' })
+    } catch (error) {
+      const errorMessage = error.errors[0].message
+      return res.status(409).json({ error: errorMessage })
     }
   }
 }

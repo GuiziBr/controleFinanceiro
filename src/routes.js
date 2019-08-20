@@ -43,7 +43,11 @@ routes.patch(
 )
 
 // expenses
-routes.get('/expenses', ExpenseController.list)
+routes.get(
+  '/expenses',
+  validate(validators.Expense.list),
+  ExpenseController.list
+)
 routes.get(
   '/expenses/:id',
   validate(validators.Expense.get),
@@ -59,6 +63,12 @@ routes.put(
   '/expenses/:id',
   validate(validators.Expense.put),
   ExpenseController.update
+)
+
+routes.patch(
+  '/expenses/:id',
+  validate(validators.Expense.patch),
+  ExpenseController.activate
 )
 
 // payments

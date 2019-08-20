@@ -1,6 +1,11 @@
 const Joi = require('joi')
 
 const schema = {
+  list: {
+    query: {
+      active: Joi.boolean()
+    }
+  },
   get: {
     params: {
       id: Joi.number()
@@ -59,6 +64,16 @@ const schema = {
         .integer()
         .min(1)
         .max(3)
+    }
+  },
+  patch: {
+    params: {
+      id: Joi.number()
+        .integer()
+        .required()
+    },
+    body: {
+      active: Joi.boolean().required()
     }
   }
 }
