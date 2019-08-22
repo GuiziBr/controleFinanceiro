@@ -26,7 +26,8 @@ module.exports = (sequelize, DataTypes) => {
     })
     Expense.belongsTo(models.StatusExpense, {
       as: 'status',
-      foreignKey: 'status_id'
+      foreignKey: 'status_id',
+      targetKey: 'id'
     })
     Expense.hasOne(models.Payment, {
       as: 'payment',

@@ -29,7 +29,7 @@ const schema = {
         .integer()
         .min(1)
         .when('status_id', {
-          is: 1,
+          is: [1, 2],
           then: Joi.required()
         })
         .when('status_id', {

@@ -1,5 +1,8 @@
+const moment = require('moment')
+
 module.exports = (sequelize, DataTypes) => {
   const Expense = sequelize.import('./Expense')
+  const StatusExpense = sequelize.import('./StatusExpense')
   const Payment = sequelize.define(
     'Payment',
     {
@@ -24,25 +27,49 @@ module.exports = (sequelize, DataTypes) => {
 
   Payment.removeAttribute('id')
 
+  Payment.beforeCreate(async payment => {
+    const paymentDate = moment(
+      `${payment.year}-${payment.month}`,
+      'YYYY-MM-DD'
+    ).endOf('M')
+    const {
+      dataValues: { purchase_date }
+    } = await Expense.findByPk(payment.expense_id)
+    if (moment(paymentDate).isBefore(purchase_date)) {
+      throw new Error('purchase_date')
+    }
+  })
   Payment.afterCreate(async payment => {
     const paymentsCount = await Payment.count({
       where: { expense_id: payment.expense_id }
     })
     const {
       dataValues: { installments_number: expenseInstallmentsNumber }
-    } = await Expense.findByPk(payment.expense_id, {
-      attributes: ['installments_number']
-    })
+    } = await Expense.findByPk(payment.expense_id)
     if (paymentsCount === expenseInstallmentsNumber) {
       // const expense = { status_id: 2 }
       try {
-        const result = await Expense.update(
-          { status_id: 2 },
-          {
-            where: { id: 1 }
-          }
-        )
-        console.log(result)
+        // const result = await Expense.update(
+        //   { status_id: 2 },
+        //   {
+        //     where: { id: 1 }
+        //   }
+        // )
+        const expenseResult = await Expense.findOne({
+          include: [
+            {
+              model: StatusExpense,
+              as: 'status',
+              attributes: ['id', 'description']
+            }
+          ],
+          where: { id: payment.expense_id }
+        })
+        // const result = await Expense.update(
+        //   { status_id: 2 },
+        //   { where: { id: 2 } }
+        // )
+        console.log(expenseResult)
       } catch (error) {
         return console.log(error)
       }

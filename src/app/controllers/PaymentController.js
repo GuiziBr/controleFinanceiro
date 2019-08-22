@@ -69,93 +69,109 @@ class PaymentController {
       .endOf('M')
       .format()
 
-    const result = await Expense.findAll({
-      raw: true,
-      nest: true,
-      where: {
-        active: true,
-        purchase_date: { [Op.lt]: queryDate },
-        [Op.and]: [
+    try {
+      const result = await Expense.findAll({
+        raw: true,
+        nest: true,
+        where: {
+          active: true,
+          purchase_date: { [Op.lt]: queryDate },
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { status_id: 1 },
+                { status_id: 3 },
+                {
+                  [Op.and]: [
+                    { status_id: 2 },
+                    { '$payment.month$': { [Op.gte]: month } },
+                    { '$payment.year$': { [Op.gte]: year } }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        include: [
           {
-            [Op.or]: [
-              { status_id: 1 },
-              { status_id: 3 },
-              {
-                [Op.and]: [
-                  { status_id: 2 },
-                  { '$payment.month$': { [Op.gte]: month } },
-                  { '$payment.year$': { [Op.gte]: year } }
-                ]
-              }
-            ]
+            model: Payment,
+            as: 'payment',
+            attributes: {
+              exclude: [
+                'remaining_amount',
+                'createdAt',
+                'updatedAt',
+                'status_id',
+                'expense_id'
+              ],
+              include: [
+                [literal('amount_paid - amount_consumed'), 'remaining_amount']
+              ]
+            }
+          },
+          {
+            model: PaymentMethod,
+            as: 'paymentMethod',
+            attributes: ['id', 'description']
+          },
+          {
+            model: Bank,
+            as: 'bank',
+            attributes: ['id', 'name']
+          },
+          {
+            model: StatusExpense,
+            as: 'status',
+            attributes: ['id', 'description']
           }
-        ]
-      },
-      include: [
-        {
-          model: Payment,
-          as: 'payment',
-          attributes: {
-            exclude: [
-              'remaining_amount',
-              'createdAt',
-              'updatedAt',
-              'status_id',
-              'expense_id'
-            ],
-            include: [
-              [literal('amount_paid - amount_consumed'), 'remaining_amount']
-            ]
+        ],
+        attributes: {
+          exclude: [
+            'createdAt',
+            'updatedAt',
+            'status_id',
+            'payment_method_id',
+            'bank_id'
+          ]
+        },
+        order: ['id']
+      })
+      let expenses = []
+      result.forEach(item => {
+        if (
+          item.payment.month === Number(month) &&
+          item.payment.year === Number(year)
+        ) {
+          const index = expenses.findIndex(expense => expense.id === item.id)
+          delete item.payment.month
+          delete item.payment.year
+          index === -1 ? expenses.push(item) : expenses.splice(index, 1, item)
+        } else {
+          const index = expenses.findIndex(expense => expense.id === item.id)
+          if (index === -1) {
+            delete item.payment
+            expenses.push(item)
           }
-        },
-        {
-          model: PaymentMethod,
-          as: 'paymentMethod',
-          attributes: ['id', 'description']
-        },
-        {
-          model: Bank,
-          as: 'bank',
-          attributes: ['id', 'name']
-        },
-        {
-          model: StatusExpense,
-          as: 'status',
-          attributes: ['id', 'description']
         }
-      ],
-      attributes: {
-        exclude: [
-          'createdAt',
-          'updatedAt',
-          'status_id',
-          'payment_method_id',
-          'bank_id'
-        ]
-      },
-      order: ['id']
-    })
-
-    let expenses = []
-    result.forEach(item => {
-      if (
-        item.payment.month === Number(month) &&
-        item.payment.year === Number(year)
-      ) {
-        expenses.push(item)
-      } else {
-        const index = expenses.findIndex(expense => expense.id === item.id)
-        if (index === -1) {
-          delete item.payment
-          expenses.push(item)
-        }
+      })
+      if (!expenses[0]) {
+        return res.status(404).json({ error: 'No expenses found' })
       }
-    })
+      const { count: countPayments } = await Payment.findAndCountAll({
+        attributes: ['expense_id'],
+        group: ['expense_id']
+      })
 
-    if (!expenses[0]) {
-      return res.status(404).json({ error: 'No expenses found' })
+      countPayments.forEach(countItem => {
+        const index = expenses.findIndex(expense => expense.id === countItem.expense_id)
+        if (index !== -1) expenses[index].currentInstallment = Number(countItem.count) + 1
+      })
+
+      return res.status(200).json(expenses)
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({ error: 'Error on listing payments' })
     }
-    return res.status(200).json(expenses)
   }
   async store (req, res) {
     try {
@@ -180,11 +196,20 @@ class PaymentController {
           default:
             return res.status(400).json({ error: 'Error on creating payment' })
         }
-      } else if (error.message === 'Payment not allowed') {
-        return res
-          .status(403)
-          .json({ error: 'Payment not allowed for expense already closed' })
+      } else if (error.message) {
+        switch (error.message) {
+          case 'Payment not allowed':
+            return res.status(403).json({ error: 'Payment not allowed for expense already closed' })
+          case 'purchase_date':
+            return res.status(403).json({ error: 'Payment date must not before Purchase date' })
+        }
       } else return res.status(500).json({ error: 'Internal server error' })
+
+      // (error.message === 'Payment not allowed') {
+      //   return res
+      //     .status(403)
+      //     .json({ error: 'Payment not allowed for expense already closed' })
+      // } else return res.status(500).json({ error: 'Internal server error' })
     }
   }
 
